@@ -128,7 +128,7 @@ public class Import extends HttpServlet {
                 }
                 if (inputLine.startsWith("-")) {
                     //DO nothing.
-                } else if (!inputLine.matches("/.+=.+=.*")) {
+                } else if (!inputLine.matches("/.*=.+=.*")) {
                     throw new IOException("Invalid format at line " + lineCnt + ": " + inputLine);
                 }
 
