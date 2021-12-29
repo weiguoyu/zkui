@@ -40,6 +40,87 @@ import org.slf4j.LoggerFactory;
 import com.deem.zkui.utils.LdapAuth;
 import java.util.Arrays;
 
+//@SuppressWarnings("serial")
+//@WebServlet(urlPatterns = {"/login"})
+//public class Login extends HttpServlet {
+//
+//    private final static Logger logger = LoggerFactory.getLogger(Login.class);
+//
+//    @Override
+//    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//        logger.debug("Login Action!");
+//        try {
+//            Properties globalProps = (Properties) getServletContext().getAttribute("globalProps");
+//            Map<String, Object> templateParam = new HashMap<>();
+//            templateParam.put("uptime", globalProps.getProperty("uptime"));
+//            templateParam.put("loginMessage", globalProps.getProperty("loginMessage"));
+//            ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "login.ftl.html");
+//        } catch (TemplateException ex) {
+//            logger.error(Arrays.toString(ex.getStackTrace()));
+//            ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
+//        }
+//
+//    }
+//
+//    @Override
+//    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//        logger.debug("Login Post Action!");
+//        try {
+//            Properties globalProps = (Properties) getServletContext().getAttribute("globalProps");
+//            Map<String, Object> templateParam = new HashMap<>();
+//            HttpSession session = request.getSession(true);
+//            session.setMaxInactiveInterval(Integer.valueOf(globalProps.getProperty("sessionTimeout")));
+//            //TODO: Implement custom authentication logic if required.
+//            String username = request.getParameter("username");
+//            String password = request.getParameter("password");
+//            String role = null;
+//            Boolean authenticated = false;
+//            //if ldap is provided then it overrides roleset.
+//            if (globalProps.getProperty("ldapAuth").equals("true")) {
+//                authenticated = new LdapAuth().authenticateUser(globalProps.getProperty("ldapUrl"), username, password, globalProps.getProperty("ldapDomain"));
+//                if (authenticated) {
+//                    JSONArray jsonRoleSet = (JSONArray) ((JSONObject) new JSONParser().parse(globalProps.getProperty("ldapRoleSet"))).get("users");
+//                    for (Iterator it = jsonRoleSet.iterator(); it.hasNext();) {
+//                        JSONObject jsonUser = (JSONObject) it.next();
+//                        if (jsonUser.get("username") != null && jsonUser.get("username").equals("*")) {
+//                            role = (String) jsonUser.get("role");
+//                        }
+//                        if (jsonUser.get("username") != null && jsonUser.get("username").equals(username)) {
+//                            role = (String) jsonUser.get("role");
+//                        }
+//                    }
+//                    if (role == null) {
+//                        role = ZooKeeperUtil.ROLE_USER;
+//                    }
+//
+//                }
+//            } else {
+//                JSONArray jsonRoleSet = (JSONArray) ((JSONObject) new JSONParser().parse(globalProps.getProperty("userSet"))).get("users");
+//                for (Iterator it = jsonRoleSet.iterator(); it.hasNext();) {
+//                    JSONObject jsonUser = (JSONObject) it.next();
+//                    if (jsonUser.get("username").equals(username) && jsonUser.get("password").equals(password)) {
+//                        authenticated = true;
+//                        role = (String) jsonUser.get("role");
+//                    }
+//                }
+//            }
+//            if (authenticated) {
+//                logger.info("Login successful: " + username);
+//                session.setAttribute("authName", username);
+//                session.setAttribute("authRole", role);
+//                response.sendRedirect("/home");
+//            } else {
+//                session.setAttribute("flashMsg", "Invalid Login");
+//                ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "login.ftl.html");
+//            }
+//
+//        } catch (ParseException | TemplateException ex) {
+//            logger.error(Arrays.toString(ex.getStackTrace()));
+//            ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
+//        }
+//    }
+//}
+
 @SuppressWarnings("serial")
 @WebServlet(urlPatterns = {"/login"})
 public class Login extends HttpServlet {
@@ -48,73 +129,16 @@ public class Login extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        logger.debug("Login Action!");
+        logger.debug("Auto Login Action!");
         try {
             Properties globalProps = (Properties) getServletContext().getAttribute("globalProps");
-            Map<String, Object> templateParam = new HashMap<>();
-            templateParam.put("uptime", globalProps.getProperty("uptime"));
-            templateParam.put("loginMessage", globalProps.getProperty("loginMessage"));
-            ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "login.ftl.html");
-        } catch (TemplateException ex) {
-            logger.error(Arrays.toString(ex.getStackTrace()));
-            ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
-        }
-
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        logger.debug("Login Post Action!");
-        try {
-            Properties globalProps = (Properties) getServletContext().getAttribute("globalProps");
-            Map<String, Object> templateParam = new HashMap<>();
+            String username = globalProps.getProperty("username");
             HttpSession session = request.getSession(true);
             session.setMaxInactiveInterval(Integer.valueOf(globalProps.getProperty("sessionTimeout")));
-            //TODO: Implement custom authentication logic if required.
-            String username = request.getParameter("username");
-            String password = request.getParameter("password");
-            String role = null;
-            Boolean authenticated = false;
-            //if ldap is provided then it overrides roleset.
-            if (globalProps.getProperty("ldapAuth").equals("true")) {
-                authenticated = new LdapAuth().authenticateUser(globalProps.getProperty("ldapUrl"), username, password, globalProps.getProperty("ldapDomain"));
-                if (authenticated) {
-                    JSONArray jsonRoleSet = (JSONArray) ((JSONObject) new JSONParser().parse(globalProps.getProperty("ldapRoleSet"))).get("users");
-                    for (Iterator it = jsonRoleSet.iterator(); it.hasNext();) {
-                        JSONObject jsonUser = (JSONObject) it.next();
-                        if (jsonUser.get("username") != null && jsonUser.get("username").equals("*")) {
-                            role = (String) jsonUser.get("role");
-                        }
-                        if (jsonUser.get("username") != null && jsonUser.get("username").equals(username)) {
-                            role = (String) jsonUser.get("role");
-                        }
-                    }
-                    if (role == null) {
-                        role = ZooKeeperUtil.ROLE_USER;
-                    }
-
-                }
-            } else {
-                JSONArray jsonRoleSet = (JSONArray) ((JSONObject) new JSONParser().parse(globalProps.getProperty("userSet"))).get("users");
-                for (Iterator it = jsonRoleSet.iterator(); it.hasNext();) {
-                    JSONObject jsonUser = (JSONObject) it.next();
-                    if (jsonUser.get("username").equals(username) && jsonUser.get("password").equals(password)) {
-                        authenticated = true;
-                        role = (String) jsonUser.get("role");
-                    }
-                }
-            }
-            if (authenticated) {
-                logger.info("Login successful: " + username);
-                session.setAttribute("authName", username);
-                session.setAttribute("authRole", role);
-                response.sendRedirect("/home");
-            } else {
-                session.setAttribute("flashMsg", "Invalid Login");
-                ServletUtil.INSTANCE.renderHtml(request, response, templateParam, "login.ftl.html");
-            }
-
-        } catch (ParseException | TemplateException ex) {
+            session.setAttribute("authName", username);
+            session.setAttribute("authRole", ZooKeeperUtil.ROLE_ADMIN);
+            response.sendRedirect("/home");
+        } catch (Exception ex) {
             logger.error(Arrays.toString(ex.getStackTrace()));
             ServletUtil.INSTANCE.renderError(request, response, ex.getMessage());
         }
